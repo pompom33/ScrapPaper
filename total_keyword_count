@@ -1,0 +1,5 @@
+for brand, files in brands.items():
+    total_keyword_count = defaultdict(int)
+    for file in files:
+        # 파일 경로 설정
+        file_path = f'./data/3_번역_완료/{brand}_번역/{file}_translated.csv'
