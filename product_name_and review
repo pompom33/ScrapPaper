@@ -1,0 +1,34 @@
+import time
+
+from playwright.sync_api import sync_playwright
+from bs4 import BeautifulSoup
+
+def crawl_page_html(playwright_page, url):
+    playwright_page.goto(url, wait_until="load", timeout=30000)
+    time.sleep(1)
+    html = playwright_page.content()
+    return html
+
+def parse_review(html):
+    soup = BeautifulSoup(html, "lxml")
+    title = soup.find("h2", class_='goods-tit').text
+    review_content = soup.find("div", class_='goods-detail-review prodReview')
+    review = review_content.find_all("p", class_='review')
+    return {
+        "title": title,
+        "review": review
+    }
+
+if __name__ == '__main__':
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=False)
+        playwright_page = browser.new_page()
+        url = "https://www.rankingdak.com/product/view?productCd=923"
+        html = crawl_page_html(playwright_page, url)
+        with open("./rankingdak.html", "w") as fw:
+            fw.write(html)
+        with open("./rankingdak.html") as fr:
+            review_html = fr.read()
+            data = parse_review(review_html)
+        print(data)
