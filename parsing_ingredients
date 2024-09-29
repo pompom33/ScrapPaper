@@ -1,0 +1,31 @@
+import time
+from playwright.sync_api import sync_playwright
+from bs4 import BeautifulSoup
+
+def crawl_page_html(playwright_page, url):
+    playwright_page.goto(url, wait_until='load', timeout=30000)
+    time.sleep(3)
+    html = playwright_page.content()
+    return html
+
+def parse_ingredient(html):
+    soup = BeautifulSoup(html, "lxml")
+    title = soup.find("h2", class_="goods-tit").text
+
+    categories = [item.text.strip() for item in soup.select("tr.ingredient_prod_table_top td")]
+    contents = [item.text.strip() for item in soup.select("tr.ingredient_prod_table_bot td")]
+
+    return {
+        "title": title,
+        "categories": categories,
+        "contents": contents
+    }
+
+if __name__ == '__main__':
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=False)
+        playwright_page = browser.new_page()
+        url = "https://www.rankingdak.com/product/view?productCd=923"
+        html = crawl_page_html(playwright_page, url)
+        data = parse_ingredient(html)
+        print(data)
