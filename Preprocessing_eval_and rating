@@ -1,0 +1,28 @@
+# 크롤링 데이터 전처리(rate, eval, drop_duplicates)
+import pandas as pd
+import re
+key_name = [
+    #파일명 입력하는 란
+]
+def extract_eval_parts(eval_str):
+    if isinstance(eval_str, str):
+        lines = eval_str.split('\n')
+        eval_dict = {}
+        for line in lines:
+            match = re.match(r'(.*?)"(.*?)"', line)
+            if match:
+                title = match.group(1).strip()
+                content = match.group(2).strip()
+                eval_dict[title] = content
+        return pd.Series(eval_dict)
+    else:
+        return pd.Series()
+for key in key_name:
+    file_path = f'./data/{key}.csv'
+    df = pd.read_csv(file_path, encoding='utf-8')
+    df = df.drop_duplicates(subset=['id', 'date', 'review'])
+    df['rate'] = df['rate'].astype(str).str.replace('별점', '').str.strip()
+    if 'eval' in df.columns:
+        eval_df = df['eval'].apply(extract_eval_parts)
+        df = pd.concat([df, eval_df], axis=1)
+        df.to_csv(file_path, index=False, encoding='utf-8')
